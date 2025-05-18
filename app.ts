@@ -5,6 +5,11 @@ import rout from './src/router/main.router';
 dotenv.config()
 const port = process.env.PORT || 3000
 const app:Express = express()
+declare namespace Express {
+  export interface Request {
+    user: any;
+  }
+}
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 

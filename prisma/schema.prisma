@@ -20,10 +20,19 @@ model testing_table_user{
   age       Int
   gender    GENDER_ENUM_FOR_USER
   rollNo    Int       @unique
+  email     String    @unique
+  password  String    
+  role      ROLLBACK_ACCESS
 }
 
 
 enum GENDER_ENUM_FOR_USER {
 MALE
 FEMALE
+}
+
+enum ROLLBACK_ACCESS {
+  ADMIN
+  USER
+  SUPER_ADMIN
 }
