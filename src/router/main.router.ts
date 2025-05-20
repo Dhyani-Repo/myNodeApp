@@ -7,7 +7,7 @@ const contoller = new MainController()
 
 
 rout.post("/user/create",contoller.register)
-rout.post("/admin/create",contoller.registerAdmin)
 rout.post("/user/login",contoller.login)
+rout.post("/refresh",contoller.refreshToken)
 rout.get("/user/:id",authMiddleware,contoller.getUserById)
 export default rout

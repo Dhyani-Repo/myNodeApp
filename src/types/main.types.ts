@@ -32,9 +32,3 @@ declare global {
   }
 }
 
-
-export enum ROLLBACK_ACCESS {
-  ADMIN,
-  USER,
-  SUPER_ADMIN
-}

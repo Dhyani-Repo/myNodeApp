@@ -19,5 +19,4 @@ export const compareHashedData = async(plainText:string, dbHashedData:string) =>
     }catch(err){
         throw new Error(`error while comparing password`)
     }
-    
 }
