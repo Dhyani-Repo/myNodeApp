@@ -1,9 +1,9 @@
-import { PrismaClient, ROLLBACK_ACCESS } from "@prisma/client";
+import { PrismaClient, ACCESS_ROLE } from "@prisma/client";
 import { IMainStd } from "../types/main.types";
 import { makeHashedString } from "../utils/hashing";
 const prisma = new PrismaClient()
 
-export const createUserOnDB = async(payload:IMainStd, role:ROLLBACK_ACCESS = ROLLBACK_ACCESS.USER) => {
+export const createUserOnDB = async(payload:IMainStd, role:ACCESS_ROLE = ACCESS_ROLE.USER) => {
     const hashedPassword = await makeHashedString(payload.password)
     
     const user = await prisma.testing_table_user.create({
@@ -26,7 +26,6 @@ export const createUserOnDB = async(payload:IMainStd, role:ROLLBACK_ACCESS = ROL
 export const getUserFromDB = async(userId:string) => {
     try{
         const user = await prisma.testing_table_user.findUnique({where:{id:userId}})
-        console.log("getUserFromDB userData : ", user)
         return user
     }catch(err){
         console.log(err)
@@ -35,11 +34,34 @@ export const getUserFromDB = async(userId:string) => {
     
 }
 
+export const getUserTokenFromDB = async(userId:string) => {
+    try{
+        const userToken = await prisma.tokens.findFirst({where:{userId:userId}})
+        return {...userToken}
+    }catch(err){
+        console.log(err)
+        throw new Error(`error while getting user From db: ${err}`)
+    }
+    
+}
 export const getUserByEmail = async(email:string) => {
     try{
         const user = await prisma.testing_table_user.findUnique({where:{email:email}})
-        console.log("getUserByEmail userData: ", user)
         return user
+    }catch(err){
+        console.log(err)
+        throw new Error(`error while getting user From db: ${err}`)
+    }
+}
+
+export const storeToken = async(token:string, id:string) => {
+    try{
+        const storedToken = await prisma.tokens.upsert({
+            where:{ userId:id },
+            create:{ userId:id, token:token },
+            update:{token}
+        })
+        return storedToken
     }catch(err){
         console.log(err)
         throw new Error(`error while getting user From db: ${err}`)
