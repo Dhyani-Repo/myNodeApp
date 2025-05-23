@@ -15,7 +15,7 @@ datasource db {
 
 
 model testing_table_user{
-  id        String    @id @unique @default(uuid())
+  id        String    @id @default(uuid())
   name      String
   age       Int
   gender    GENDER_ENUM_FOR_USER
@@ -26,7 +26,7 @@ model testing_table_user{
 }
 
 model tokens {
-  id        String    @id @unique @default(uuid())
+  id        String    @id @default(uuid())
   userId    String    @unique
   token     String
 }
