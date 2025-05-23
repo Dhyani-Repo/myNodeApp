@@ -20,7 +20,7 @@ services:
       - "8080:8080"
     volumes:
       - .:/app
-    command: ["sh", "-c", "npx prisma generate && npx prisma db push && npm run dev -- -p 8080"]
+    command: ["sh", "-c", "npx prisma generate && npx prisma db push --force-reset && npm run dev -- -p 8080"]
     depends_on:
       - db
 

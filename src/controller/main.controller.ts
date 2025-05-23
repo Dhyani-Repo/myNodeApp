@@ -6,16 +6,26 @@ import { compareHashedData } from "../utils/hashing"
 import { getTokens, verifyJwtRefreshToken } from "../utils/jwt"
 import { SuccessResponse, MessagesSuccessResponse, ErrorResponse, MessagesErrorResponse } from "../utils/response.utils"
 import { decode } from "jsonwebtoken"
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 export class MainController {
     constructor() {
         console.log("MainController has been initialised.....")
     }
     public register = async(req:Request,res:Response) => {
-        console.log("This is Request PAYLOAD: ",req.body)
-        const userData = await createUserOnDB(req?.body)
-        console.log("Hey The Current Istance of User Consist Data: ",userData)
-        SuccessResponse(req,res,200,{user:userData},MessagesSuccessResponse.REFRESHED)
-        res.json({user:userData})
+        try{
+            console.log("This is Request PAYLOAD: ",req.body)
+            const userData = await createUserOnDB(req?.body)
+            console.log("Hey The Current Istance of User Consist Data: ",userData)
+            SuccessResponse(req,res,200,{user:userData},MessagesSuccessResponse.CREATED)
+        }catch(err:any){
+            console.log("error: code : ",err?.code)
+            if(err instanceof PrismaClientKnownRequestError || err.code=='P2002'){
+                ErrorResponse(req,res,409,{error:err},MessagesErrorResponse.DUPLICATE_ENTRY)
+            }else{
+                ErrorResponse(req,res,409,{error:err},MessagesErrorResponse.RESOURCE_CREATION_FAILED)
+            }
+        }
+        
     }
     
     public refreshToken = async(req:Request,res:Response) => {
@@ -38,25 +48,35 @@ export class MainController {
         }
     }
     public login = async(req:Request,res:Response) => {
-        const data:ILoginBody = req?.body
-        let token :any = {}
-        if(!data || !data.email || !data.password){throw new Error(MessagesErrorResponse.LOGIN_INVALID_DATA)}
-        const UserExisted = await getUserByEmail(String(data.email))
-        if(!UserExisted){throw new Error(MessagesErrorResponse.USER_NOT_EXIST)}
-        const isPasswordTrue = await compareHashedData(data.password,UserExisted.password)
-        if(isPasswordTrue){  token = getTokens({userId:UserExisted.id}) }
-        await storeToken(token.refreshToken, UserExisted.id)
-        SuccessResponse(req,res,200,{data:token},MessagesSuccessResponse.LOGIN_SUCCESS)
+        try{
+            const data:ILoginBody = req?.body
+            let token :any = {}
+            if(!data || !data.email || !data.password){throw new Error(MessagesErrorResponse.LOGIN_INVALID_DATA)}
+            const UserExisted = await getUserByEmail(String(data.email))
+            if(!UserExisted){throw new Error(MessagesErrorResponse.USER_NOT_EXIST)}
+            const isPasswordTrue = await compareHashedData(data.password,UserExisted.password)
+            if(isPasswordTrue){  token = getTokens({userId:UserExisted.id}) }
+            await storeToken(token.refreshToken, UserExisted.id)
+            SuccessResponse(req,res,200,{data:token},MessagesSuccessResponse.LOGIN_SUCCESS)
+        }catch(err:any){
+            ErrorResponse(req,res,401,{},MessagesErrorResponse.WRONG_CREDENTIALS)
+        }
+        
     }
     public getUserById = async(req:Request, res:Response) => {
-        const id = req.params.id
-        const user = req.user
-        const userData:any = await getUserFromDB(user?.userId)
-        if(!userData){throw new Error(MessagesErrorResponse.UNAUTHORISED)}
-        if([ACCESS_ROLE.ADMIN,ACCESS_ROLE.SUPER_ADMIN].includes(userData?.role)){ErrorResponse(req,res,401,{},MessagesErrorResponse.NOT_ALLOWD)}
-        if(!id){throw new Error("Id not provided in params for user to get details")}
-        const expectedUserData = await getUserFromDB(id as string)
-        if(!expectedUserData){throw new Error("No Such Id Available of User in DB")}
-        SuccessResponse(req,res,200,{data:expectedUserData},MessagesSuccessResponse.FETCH_SUCCESS)
+        try{
+            const id = req.params.id
+            const user = req.user
+            const userData:any = await getUserFromDB(user?.userId)
+            if(!userData){throw new Error(MessagesErrorResponse.UNAUTHORISED)}
+            if([ACCESS_ROLE.ADMIN,ACCESS_ROLE.SUPER_ADMIN].includes(userData?.role)){ErrorResponse(req,res,401,{},MessagesErrorResponse.UNAUTHORISED)}
+            if(!id){throw new Error("Id not provided in params for user to get details")}
+            const expectedUserData = await getUserFromDB(id as string)
+            if(!expectedUserData){throw new Error("No Such Id Available of User in DB")}
+            SuccessResponse(req,res,200,{data:expectedUserData},MessagesSuccessResponse.FETCH_SUCCESS)
+        }catch(err:any){
+            ErrorResponse(req,res,401,{},MessagesErrorResponse.RANDOM_ERROR)
+        }
+        
     }
 }

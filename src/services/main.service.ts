@@ -5,7 +5,6 @@ const prisma = new PrismaClient()
 
 export const createUserOnDB = async(payload:IMainStd, role:ACCESS_ROLE = ACCESS_ROLE.USER) => {
     const hashedPassword = await makeHashedString(payload.password)
-    
     const user = await prisma.testing_table_user.create({
         data:{
             name:payload.name,
