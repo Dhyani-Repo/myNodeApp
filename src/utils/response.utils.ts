@@ -50,5 +50,8 @@ export const ErrorResponse  = async (
 export const MessagesErrorResponse = {
     UNAUTHORISED: "Unauthorized Access !",
     RANDOM_ERROR: "Invalid Token !",
-    NOT_ALLOWD :"You don't have permissions to see the detials !"
+    NOT_ALLOWD :"You don't have permissions to see the detials !",
+    REFERESH_TOKEN_NOT_FOUND : "No Referesh Token Provided",
+    USER_NOT_EXIST:"User doesn't exist !",
+    LOGIN_INVALID_DATA : "Please provide email/username and password"
 }
