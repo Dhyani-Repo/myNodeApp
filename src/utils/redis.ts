@@ -1,29 +1,52 @@
-import { createClient } from 'redis';
+import { createClient, RedisArgument, RedisClientPoolType, RedisClientType, RedisDefaultModules } from 'redis';
+import { ErrorResponse, MessagesErrorResponse } from './response.utils';
 
-const redis = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
-});
+export class RedisClientSingleton {
 
-redis.on('error', (err) => console.error('Redis Client Error', err));
+    private static redis: RedisClientSingleton 
+    private redisClient : RedisClientType
 
-export async function initRedis() {
-  if (!redis.isOpen) await redis.connect();
-}
-
-export default redis;
-
-export const setValueInRedis = async (key:string,value:any) => {
-    try{
-        await redis.set(key,value)
-    }catch(e){
-        console.log("ERROR Accured While Setting Value: ",e)
+    private constructor(){
+        this.redisClient = createClient({url:"redis://localhost:6379"})
+        console.log("Instance Redis Has Been Initialised at port 6379")
     }
-}
 
-export const getValueFromRedis = async (key:string) => {
-    try{
-        await redis.get(key)
-    }catch(e){
-        console.log("ERROR Accured While Setting Value: ",e)
+    public static  connect = async ():Promise<RedisClientSingleton> => {
+        try{
+            if(!this.redis){
+                const redisInstance = new RedisClientSingleton()
+                await redisInstance.redisClient.connect()
+                this.redis = redisInstance
+            }
+            return this.redis
+        }catch(err){
+            throw new Error("Unable to connect with redis")
+        }
+    }
+    public  setValueInRedis = async (key:string,value:any) => {
+        try{
+            const ack = await this.redisClient.set(key,value)
+            console.log("setAck",ack)
+            return true
+        }catch(e){
+            console.log("ERROR Accured While Setting Value into REDIS",e)
+        }
+    }
+
+    public  getValueFromRedis = async (key:string) => {
+        try{
+            const value = await this.redisClient.get(key)
+            return value
+        }catch(e){
+            console.log("ERROR Accured While getting Value form REDIS: ",e)
+        }
+    }
+    public  deleteKeyValuePair = async (key:string) => {
+        try{
+            const value = await this.redisClient.del(key)
+            return value
+        }catch(e){
+            console.log("ERROR Accured While deleting Value form REDIS: ",e)
+        }
     }
 }
