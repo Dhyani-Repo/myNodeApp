@@ -20,6 +20,8 @@ jobs:
 
     - name: Copy project files to EC2
       run: |
+        
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "rm -rf /home/ubuntu/app"
         scp -o StrictHostKeyChecking=no -r ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/app
 
     - name: Deploy App on EC2
