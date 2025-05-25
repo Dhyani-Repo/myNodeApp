@@ -35,6 +35,5 @@ jobs:
           echo "JWT_ACCESS_KEY=${{ secrets.ENV_JWT_ACCESS_KEY }}" >> .env
           echo "JWT_REFRESH_KEY=${{ secrets.ENV_JWT_REFRESH_KEY }}" >> .env
 
-          docker-compose down
-          docker-compose up -d --build
+          node --max-old-space-size=1024 -r ts-node/register app.ts
         EOF
