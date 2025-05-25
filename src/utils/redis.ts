@@ -7,7 +7,16 @@ export class RedisClientSingleton {
     private redisClient : RedisClientType
 
     private constructor(){
-        this.redisClient = createClient({url:"redis://localhost:6379"})
+        // this.redisClient = createClient({url:"redis://localhost:6379"})
+        this.redisClient = createClient({
+            username: 'default',
+            password: 'mi9mmJQjioSDB9cgl7jqYIQJx9MpRawk',
+            socket: {
+                host: 'redis-10327.c256.us-east-1-2.ec2.redns.redis-cloud.com',
+                port: 10327
+            }
+        });
+
         console.log("Instance Redis Has Been Initialised at port 6379")
     }
 
