@@ -6,4 +6,8 @@ services:
     ports:
       - "8080:8080"
     command: ["sh", "-c", "npx prisma generate && npx prisma db push --force-reset && npm run dev -- -p 8080"]
+    deploy:
+      resources:
+        limits:
+          memory: 1g  # or 2g if needed
 
