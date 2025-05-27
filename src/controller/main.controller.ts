@@ -1,7 +1,8 @@
 import { Request,Response } from "express"
 import { EMainGender, ILoginBody } from "../types/main.types"
 import { ACCESS_ROLE } from "@prisma/client"
-import { createUserOnDB, getUserByEmail, getUserFromDB, getUserTokenFromDB, storeToken } from "../services/main.service"
+// import { createUserOnDB, getUserByEmail, getUserFromDB, getUserTokenFromDB, storeToken } from "../services/main.service"
+import { DBService } from "../services/main.service"
 import { compareHashedData } from "../utils/hashing"
 import { getTokens, verifyJwtRefreshToken } from "../utils/jwt"
 import { SuccessResponse, MessagesSuccessResponse, ErrorResponse, MessagesErrorResponse } from "../utils/response.utils"
@@ -9,9 +10,11 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { RedisClientSingleton } from "../utils/redis"
 export class MainController {
     private redis:RedisClientSingleton
+    private dbService : DBService
     private constructor(redis:RedisClientSingleton) {
         console.log("MainController has been initialised.....")
         this.redis = redis
+        this.dbService = new DBService()
     }
     public static init = async () => {
         const redisClient = await RedisClientSingleton.connect()
@@ -21,7 +24,7 @@ export class MainController {
     public register = async(req:Request,res:Response) => {
         try{
             console.log("This is Request PAYLOAD: ",req.body)
-            const userData = await createUserOnDB(req?.body)
+            const userData = await this.dbService.createUserOnDB(req?.body)
             SuccessResponse(req,res,200,{user:userData},MessagesSuccessResponse.CREATED)
         }catch(err:any){
             console.log("error: code : ",err?.code)
@@ -60,7 +63,7 @@ export class MainController {
             const data:ILoginBody = req?.body
             let token :any = {}
             if(!data || !data.email || !data.password){throw new Error(MessagesErrorResponse.LOGIN_INVALID_DATA)}
-            const UserExisted = await getUserByEmail(String(data.email))
+            const UserExisted = await this.dbService.getUserByEmail(String(data.email))
             console.log("User existed Data: ",UserExisted)
             if(!UserExisted){throw new Error(MessagesErrorResponse.USER_NOT_EXIST)}
             const isPasswordTrue = await compareHashedData(data.password,UserExisted.password)
@@ -78,11 +81,11 @@ export class MainController {
         try{
             const id = req.params.id
             const user = req.user
-            const userData:any = await getUserFromDB(user?.userId)
+            const userData:any = await this.dbService.getUserFromDB(user?.userId)
             if(!userData){throw new Error(MessagesErrorResponse.UNAUTHORISED)}
             if([ACCESS_ROLE.ADMIN,ACCESS_ROLE.SUPER_ADMIN].includes(userData?.role)){ErrorResponse(req,res,401,{},MessagesErrorResponse.UNAUTHORISED)}
             if(!id){throw new Error("Id not provided in params for user to get details")}
-            const expectedUserData = await getUserFromDB(id as string)
+            const expectedUserData = await this.dbService.getUserFromDB(id as string)
             if(!expectedUserData){throw new Error("No Such Id Available of User in DB")}
             SuccessResponse(req,res,200,{data:expectedUserData},MessagesSuccessResponse.FETCH_SUCCESS)
         }catch(err:any){
