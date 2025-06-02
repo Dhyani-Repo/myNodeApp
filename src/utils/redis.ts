@@ -9,11 +9,11 @@ export class RedisClientSingleton {
     private constructor(){
         // this.redisClient = createClient({url:"redis://localhost:6379"})
         this.redisClient = createClient({
-            username: 'default',
-            password: 'mi9mmJQjioSDB9cgl7jqYIQJx9MpRawk',
+            username: `${process.env.REDIS_USERNAME}`,
+            password: `${process.env.REDIS_PASSWORD}`,
             socket: {
-                host: 'redis-10327.c256.us-east-1-2.ec2.redns.redis-cloud.com',
-                port: 10327
+                host: `${process.env.REDIS_HOST}`,
+                port: Number(process.env.REDIS_PORT),
             }
         });
 
